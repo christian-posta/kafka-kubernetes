@@ -1,0 +1,226 @@
+apiVersion: v1
+description: Creates a ZooKeeper Server
+id: fabric8-zookeeper-config
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: zk-client
+  spec:
+    ports:
+    - port: 2181
+      protocol: TCP
+      targetPort: client
+    selector:
+      name: zookeeper-pod
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      name: zookeeper-1
+    name: zookeeper-1
+  spec:
+    ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+    - name: followers
+      port: 2888
+      targetPort: 2888
+    - name: election
+      port: 3888
+      targetPort: 3888
+    selector:
+      name: zookeeper-pod
+      server: '1'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      name: zookeeper-2
+    name: zookeeper-2
+  spec:
+    ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+    - name: followers
+      port: 2888
+      targetPort: 2888
+    - name: election
+      port: 3888
+      targetPort: 3888
+    selector:
+      name: zookeeper-pod
+      server: '2'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      name: zookeeper-3
+    name: zookeeper-3
+  spec:
+    ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+    - name: peer
+      port: 2888
+      targetPort: 2888
+    - name: election
+      port: 3888
+      targetPort: 3888
+    selector:
+      name: zookeeper-pod
+      server: '3'
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    labels:
+      name: zookeeper-controller
+    name: zookeeper-controller-1
+  spec:
+    replicas: 1
+    selector:
+      name: zookeeper-pod
+      server: '1'
+    template:
+      metadata:
+        labels:
+          name: zookeeper-pod
+          server: '1'
+      spec:
+        containers:
+        - env:
+          - name: SERVER_ID
+            value: '1'
+          - name: MAX_SERVERS
+            value: '3'
+          image: fabric8/zookeeper
+          imagePullPolicy: IfNotPresent
+          name: zookeeper-server-1
+          ports:
+          - containerPort: 2181
+            name: client
+            protocol: TCP
+          - containerPort: 2888
+            name: peer
+            protocol: TCP
+          - containerPort: 3888
+            name: election
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /opt/zookeeper/data
+            name: data
+          - mountPath: /opt/zookeeper/log
+            name: log
+        serviceAccountName: fabric8
+        volumes:
+        - hostPath:
+            path: /volumes/zookeeper/1/data
+          name: data
+        - hostPath:
+            path: /volumes/zookeeper/1/log
+          name: log
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    labels:
+      name: zookeeper-controller
+    name: zookeeper-controller-2
+  spec:
+    replicas: 1
+    selector:
+      name: zookeeper-pod
+      server: '2'
+    template:
+      metadata:
+        labels:
+          name: zookeeper-pod
+          server: '2'
+      spec:
+        containers:
+        - env:
+          - name: SERVER_ID
+            value: '2'
+          - name: MAX_SERVERS
+            value: '3'
+          image: fabric8/zookeeper
+          imagePullPolicy: IfNotPresent
+          name: zookeeper-server-2
+          ports:
+          - containerPort: 2181
+            name: client
+            protocol: TCP
+          - containerPort: 2888
+            name: peer
+            protocol: TCP
+          - containerPort: 3888
+            name: election
+            protocol: TCP
+          resources: {}
+          volumeMounts:
+          - mountPath: /opt/zookeeper/data
+            name: data
+          - mountPath: /opt/zookeeper/log
+            name: log
+        serviceAccountName: fabric8
+        volumes:
+        - hostPath:
+            path: /volumes/zookeeper/2/data
+          name: data
+        - hostPath:
+            path: /volumes/zookeeper/2/log
+          name: log
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    labels:
+      name: zookeeper-controller
+    name: zookeeper-controller-3
+  spec:
+    replicas: 1
+    selector:
+      name: zookeeper-pod
+      server: '3'
+    template:
+      metadata:
+        labels:
+          name: zookeeper-pod
+          server: '3'
+      spec:
+        containers:
+        - env:
+          - name: SERVER_ID
+            value: '1'
+          - name: MAX_SERVERS
+            value: '3'
+          image: fabric8/zookeeper
+          imagePullPolicy: IfNotPresent
+          name: zookeeper-server-3
+          ports:
+          - containerPort: 2181
+            name: client
+            protocol: TCP
+          - containerPort: 2888
+            name: peer
+            protocol: TCP
+          - containerPort: 3888
+            name: election
+            protocol: TCP
+          resources: {}
+          volumeMounts:
+          - mountPath: /opt/zookeeper/data
+            name: data
+          - mountPath: /opt/zookeeper/log
+            name: log
+        serviceAccountName: fabric8
+        volumes:
+        - hostPath:
+            path: /volumes/zookeeper/3/data
+          name: data
+        - hostPath:
+            path: /volumes/zookeeper/3/log
+          name: log
+kind: List
+name: fabric8-zookeeper-config

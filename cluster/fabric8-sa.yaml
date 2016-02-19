@@ -1,0 +1,10 @@
+apiVersion: v1
+imagePullSecrets:
+- name: fabric8-dockercfg-773hs
+kind: ServiceAccount
+metadata:
+  name: fabric8
+secrets:
+- name: fabric8-token-4cr8t
+- name: fabric8-dockercfg-773hs
+- name: fabric8-token-vduig
